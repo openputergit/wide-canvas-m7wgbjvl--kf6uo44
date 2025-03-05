@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prateek E-Mitra Cafe - Smart Business Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.5/xlsx.full.min.js"></script>
+    
+    <style>
+        .skeumorphic {
+            background: linear-gradient(145deg, #f0f0f0, #ffffff);
+            box-shadow: 20px 20px 60px #bebebe, -20px -20px 60px #ffffff;
+            border-radius: 15px;
+        }
+        .skeumorphic-inset {
+            background: linear-gradient(145deg, #e6e6e6, #ffffff);
+            box-shadow: inset 5px 5px 10px #bebebe, inset -5px -5px 10px #ffffff;
+            border-radius: 10px;
+        }
+        .skeumorphic-button {
+            background: linear-gradient(145deg, #ffffff, #e6e6e6);
+            box-shadow: 5px 5px 10px #bebebe, -5px -5px 10px #ffffff;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .skeumorphic-button:active {
+            background: linear-gradient(145deg, #e6e6e6, #ffffff);
+            box-shadow: inset 5px 5px 10px #bebebe, inset -5px -5px 10px #ffffff;
+        }
+        #loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.8);
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen font-['Roboto']">
+    <div id="loading" class="flex items-center justify-center">
+        <div class="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
+    </div>
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="container mx-auto px-4 py-8">
+        <div class="skeumorphic max-w-md mx-auto p-8">
+            <h1 class="text-3xl font-bold text-center mb-8">Prateek E-Mitra Cafe</h1>
+            <div class="space-y-4">
+                <input type="password" id="loginPassword" placeholder="Enter Password" class="skeumorphic-inset w-full p-3 outline-none">
+                <button onclick="login()" class="skeumorphic-button w-full p-3 text-blue-600 font-bold">Login</button>
+                <button onclick="forgotPassword()" class="skeumorphic-button w-full p-3 text-gray-600">Forgot Password</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div id="dashboard" class="hidden container mx-auto px-4 py-8">
+        <div class="skeumorphic mb-6 p-4 flex justify-between items-center">
+            <button onclick="changeDate(-1)" class="skeumorphic-button px-4 py-2"><i class="bi bi-chevron-left"></i></button>
+            <h2 id="currentDate" class="text-xl font-bold"></h2>
+            <button onclick="changeDate(1)" class="skeumorphic-button px-4 py-2"><i class="bi bi-chevron-right"></i></button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Balance Section -->
+            <div class="skeumorphic p-6">
+                <h2 class="text-xl font-bold mb-4">Balances</h2>
+                <div class="space-y-3">
+                    <div class="skeumorphic-inset p-4 flex justify-between">
+                        <span>Cash Balance:</span>
+                        <span id="cashBalance" class="font-bold">₹0 <button onclick="editBalance('cash')" class="text-blue-600">Edit</button></span>
+                    </div>
+                    <div class="skeumorphic-inset p-4 flex justify-between">
+                        <span>E-Mitra Balance:</span>
+                        <span id="emitraBalance" class="font-bold">₹0 <button onclick="editBalance('emitra')" class="text-blue-600">Edit</button></span>
+                    </div>
+                    <div class="skeumorphic-inset p-4 flex justify-between">
+                        <span>Account Balance:</span>
+                        <span id="accountBalance" class="font-bold">₹0 <button onclick="editBalance('account')" class="text-blue-600">Edit</button></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Services Section -->
+            <div class="skeumorphic p-6">
+                <h2 class="text-xl font-bold mb-4">Services</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <button onclick="showServiceEntry('AEPS')" class="skeumorphic-button p-4">AEPS</button>
+                    <button onclick="showServiceEntry('PhonePe')" class="skeumorphic-button p-4">PhonePe Business</button>
+                    <button onclick="showServiceEntry('Account196')" class="skeumorphic-button p-4">Account 196</button>
+                    <button onclick="showServiceEntry('Account197')" class="skeumorphic-button p-4">Account 197</button>
+                    <button onclick="showServiceEntry('Account77')" class="skeumorphic-button p-4">Account 77</button>
+                    <button onclick="showServiceEntry('Cash')" class="skeumorphic-button p-4">Cash</button>
+                    <button onclick="showServiceEntry('AepsAmount')" class="skeumorphic-button p-4">AEPS Amount</button>
+                </div>
+            </div>
+
+            <!-- Online Services -->
+            <div class="skeumorphic p-6">
+                <h2 class="text-xl font-bold mb-4">Online Services</h2>
+                <div class="space-y-3">
+                    <button onclick="showServiceEntry('OnlineForm')" class="skeumorphic-button w-full p-4">Online Form</button>
+                    <button onclick="showServiceEntry('EmitraWork')" class="skeumorphic-button w-full p-4">E-Mitra Work</button>
+                    <button onclick="showServiceEntry('Lamination')" class="skeumorphic-button w-full p-4">Lamination</button>
+                    <button onclick="showServiceEntry('PhotoCopy')" class="skeumorphic-button w-full p-4">Photo Copy</button>
+                    <button onclick="showServiceEntry('MoneyTransfer')" class="skeumorphic-button w-full p-4">Money Transfer</button>
+                    <button onclick="showServiceEntry('OtherWork')" class="skeumorphic-button w-full p-4">Other Work</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transactions List -->
+        <div class="skeumorphic mt-8 p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">Transactions</h2>
+                <div class="space-x-2">
+                    <button onclick="exportPDF()" class="skeumorphic-button px-4 py-2">Export PDF</button>
+                    <button onclick="exportExcel()" class="skeumorphic-button px-4 py-2">Export Excel</button>
+                </div>
+            </div>
+            <div id="transactionsList" class="space-y-3"></div>
+        </div>
+    </div>
+
+    <!-- Entry Modal -->
+    <div id="entryModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+        <div class="skeumorphic bg-white p-6 max-w-md w-full">
+            <h3 id="modalTitle" class="text-xl font-bold mb-4">Add Entry</h3>
+            <input type="number" id="entryAmount" placeholder="Amount" class="skeumorphic-inset w-full p-3 mb-4">
+            <input type="text" id="entryNotes" placeholder="Notes" class="skeumorphic-inset w-full p-3 mb-4">
+            <input type="password" id="lockCode" placeholder="Lock Code" class="skeumorphic-inset w-full p-3 mb-4">
+            <div class="flex space-x-4">
+                <button onclick="saveEntry()" class="skeumorphic-button flex-1 p-3 text-blue-600">Save</button>
+                <button onclick="closeModal()" class="skeumorphic-button flex-1 p-3 text-red-600">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentService = '';
+        let transactions = [];
+        let currentDate = new Date();
+        const LOCK_CODE = '6284';
+        const LOGIN_PASSWORD = '8462';
+        const FORGOT_PASSWORD_PHONE = '7891303829';
+
+        function showLoading() {
+            document.getElementById('loading').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function updateDateDisplay() {
+            document.getElementById('currentDate').textContent = currentDate.toLocaleDateString('en-IN', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+
+        function changeDate(days) {
+            currentDate.setDate(currentDate.getDate() + days);
+            updateDateDisplay();
+            loadData();
+        }
+
+        function login() {
+            const password = document.getElementById('loginPassword').value;
+            if(password === LOGIN_PASSWORD) {
+                localStorage.setItem('isLoggedIn', 'true');
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('dashboard').classList.remove('hidden');
+                updateDateDisplay();
+                loadData();
+            } else {
+                alert('Invalid password!');
+            }
+        }
+
+        function forgotPassword() {
+            const otp = Math.floor(1000 + Math.random() * 9000);
+            alert(`OTP sent to ${FORGOT_PASSWORD_PHONE}: ${otp}`);
+        }
+
+        function showServiceEntry(service) {
+            currentService = service;
+            document.getElementById('modalTitle').textContent = `Add ${service} Entry`;
+            document.getElementById('entryModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('entryModal').classList.add('hidden');
+            document.getElementById('entryAmount').value = '';
+            document.getElementById('entryNotes').value = '';
+            document.getElementById('lockCode').value = '';
+        }
+
+        async function saveEntry() {
+            const amount = document.getElementById('entryAmount').value;
+            const notes = document.getElementById('entryNotes').value;
+            const lockCode = document.getElementById('lockCode').value;
+            
+            if(!amount) {
+                alert('Please enter an amount');
+                return;
+            }
+
+            if(lockCode !== LOCK_CODE) {
+                alert('Invalid lock code');
+                return;
+            }
+
+            showLoading();
+
+            try {
+                const response = await fetch('https://r0c8kgwocscg8gsokogwwsw4.zetaverse.one/mongodb', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer dP4m0Sjx6LOwW3k0TsTEzizU2Jg1',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        appSlug: 'prateek-emitra-001',
+                        action: 'create',
+                        collection: 'transactions',
+                        data: {
+                            service: currentService,
+                            amount: parseFloat(amount),
+                            notes: notes,
+                            timestamp: new Date().toISOString(),
+                            date: currentDate.toDateString()
+                        }
+                    })
+                });
+
+                const data = await response.json();
+                if(data.success) {
+                    loadData();
+                    closeModal();
+                }
+            } catch(error) {
+                console.error('Error saving entry:', error);
+                alert('Failed to save entry');
+            }
+
+            hideLoading();
+        }
+
+        async function loadData() {
+            showLoading();
+
+            try {
+                const response = await fetch('https://r0c8kgwocscg8gsokogwwsw4.zetaverse.one/mongodb', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer dP4m0Sjx6LOwW3k0TsTEzizU2Jg1',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        appSlug: 'prateek-emitra-001',
+                        action: 'read',
+                        collection: 'transactions',
+                        conditions: {
+                            date: currentDate.toDateString()
+                        }
+                    })
+                });
+
+                const data = await response.json();
+                if(data.success) {
+                    transactions = data.result;
+                    updateTransactionsList();
+                    updateBalances();
+                }
+            } catch(error) {
+                console.error('Error loading data:', error);
+                alert('Failed to load data');
+            }
+
+            hideLoading();
+        }
+
+        function updateTransactionsList() {
+            const list = document.getElementById('transactionsList');
+            list.innerHTML = '';
+
+            transactions.forEach(transaction => {
+                const div = document.createElement('div');
+                div.className = 'skeumorphic-inset p-4 flex justify-between items-center';
+                const timestamp = new Date(transaction.timestamp);
+                div.innerHTML = `
+                    <div>
+                        <span class="font-bold">${transaction.service}</span>
+                        <p class="text-sm text-gray-600">${transaction.notes || ''}</p>
+                        <p class="text-xs text-gray-500">${timestamp.toLocaleString()}</p>
+                    </div>
+                    <span class="font-bold">₹${transaction.amount}</span>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function updateBalances() {
+            let cash = 0, emitra = 0, account = 0;
+
+            transactions.forEach(t => {
+                switch(t.service) {
+                    case 'AEPS':
+                    case 'Cash':
+                        cash += t.amount;
+                        break;
+                    case 'EmitraWork':
+                        emitra += t.amount;
+                        break;
+                    case 'Account196':
+                    case 'Account197':
+                    case 'Account77':
+                        account += t.amount;
+                        break;
+                }
+            });
+
+            document.getElementById('cashBalance').textContent = `₹${cash}`;
+            document.getElementById('emitraBalance').textContent = `₹${emitra}`;
+            document.getElementById('accountBalance').textContent = `₹${account}`;
+        }
+
+        function exportPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.text(`Transactions Report - ${currentDate.toDateString()}`, 20, 20);
+            let y = 40;
+            
+            transactions.forEach(t => {
+                doc.text(`${t.service} - ₹${t.amount} - ${t.notes || ''}`, 20, y);
+                y += 10;
+            });
+            
+            doc.save(`transactions-${currentDate.toDateString()}.pdf`);
+        }
+
+        function exportExcel() {
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(transactions);
+            XLSX.utils.book_append_sheet(wb, ws, "Transactions");
+            XLSX.writeFile(wb, `transactions-${currentDate.toDateString()}.xlsx`);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            if(localStorage.getItem('isLoggedIn') === 'true') {
+                login();
+            } else {
+                currentDate.setDate(currentDate.getDate() - 1);
+                updateDateDisplay();
+                loadData();
+            }
+        });
+    </script>
+<script>document.body.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); return }, { passive: false })</script>
+	</body>
+</html>
